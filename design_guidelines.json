@@ -1,0 +1,166 @@
+{
+  "app_name": "ZeroFuel",
+  "personality": "1 iOS-Native Clean infused with 6 Glass/Luxe over Map",
+  "personality_one_liner": "A frictionless, premium micro-mobility experience where the map takes center stage and UI floats elegantly with glassmorphism.",
+  "color": {
+    "surface": "#FFFFFF",
+    "onSurface": "#111111",
+    "surfaceSecondary": "#F8F8F8",
+    "onSurfaceSecondary": "#555555",
+    "surfaceTertiary": "#EAEAEA",
+    "onSurfaceTertiary": "#777777",
+    "surfaceInverse": "#000000",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#1ED760",
+    "brandPrimary": "#1ED760",
+    "onBrandPrimary": "#000000",
+    "brandSecondary": "#12B34B",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "rgba(30, 215, 96, 0.15)",
+    "onBrandTertiary": "#1ED760",
+    "success": "#1ED760",
+    "onSuccess": "#000000",
+    "warning": "#FFB800",
+    "onWarning": "#000000",
+    "error": "#FF3B30",
+    "onError": "#FFFFFF",
+    "info": "#1ED760",
+    "onInfo": "#000000",
+    "border": "#E5E5E5",
+    "borderStrong": "#CCCCCC",
+    "divider": "#F0F0F0"
+  },
+  "typography": {
+    "displayFontFamily": "Plus Jakarta Sans",
+    "textFontFamily": "Plus Jakarta Sans",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous map spacing. Floating pills must have md/lg padding inside and xl margin from screen edges. Bottom sheets use xl inner padding.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "2",
+  "navigation": "stack_only",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Floating pills over the map ('Where to?', avatar).",
+      "Floating CTA ('Scan QR') hovering over the map.",
+      "Modal scrims and bottom sheet drag-handle zones."
+    ],
+    "dont's": [
+      "Inside bottom sheet content rows.",
+      "Forms or dense data metrics."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Login",
+      "purpose": "Frictionless Phone + OTP auth and KYC prompt.",
+      "states": {
+        "loading": "Spinner centered on screen.",
+        "empty": "N/A",
+        "error": "Standard toast/inline error for wrong OTP."
+      },
+      "layout": "Clean full-bleed layout. Large wordmark. Phone input with +91 prefix. Smooth transition to 6-digit OTP (mock 123456). PENDING_KYC banner floating at top/bottom once authenticated."
+    },
+    {
+      "name": "Main Map Screen",
+      "purpose": "Full-screen exploration of available EVs and Hubs.",
+      "states": {
+        "loading": "Map skeleton/loading overlay.",
+        "empty": "No EVs nearby message inside bottom sheet.",
+        "error": "Location permission denied card."
+      },
+      "layout": "Full-screen map. Top: Floating glass pill 'Where to?' + Profile Avatar. Bottom: Persistent bottom sheet at 15% showing 'Nearest Hub', and a floating 'Scan QR' FAB right above the sheet."
+    },
+    {
+      "name": "Vehicle Details",
+      "purpose": "Detailed view of the selected Ather 450X to confirm reservation.",
+      "states": {
+        "loading": "Skeleton loading for vehicle stats.",
+        "empty": "N/A",
+        "error": "Vehicle unavailable message."
+      },
+      "layout": "Expands bottom sheet to 40-50%. Shows EV image/Model, Battery %, Range (km), and Pricing. Sticky 'Reserve Vehicle' button at the bottom."
+    },
+    {
+      "name": "Active Rental",
+      "purpose": "Live trip tracking and billing.",
+      "states": {
+        "loading": "Connecting to vehicle...",
+        "empty": "N/A",
+        "error": "Connection lost warning."
+      },
+      "layout": "Live map mode. Bottom sheet locked open displaying Duration Timer, Cost (ticking up), and remaining Battery. Includes a 'Swipe to End Rental' slider."
+    },
+    {
+      "name": "Sidebar/Profile",
+      "purpose": "Account management and ride history.",
+      "states": {
+        "loading": "Skeleton profile data.",
+        "empty": "No ride history.",
+        "error": "Failed to load profile."
+      },
+      "layout": "Standard screen. Top section: User details + Wallet Balance card. List below: Ride History, Help & Support. Minimalist list rows with chevrons."
+    }
+  ],
+  "images": {
+    "profile_avatar": {
+      "url": "https://images.unsplash.com/photo-1651346158507-a2810590687f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTJ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwcHJvZmlsZSUyMGF2YXRhciUyMHBob3RvZ3JhcGh5fGVufDB8fHx8MTc4MjM3MjQzMXww&ixlib=rb-4.1.0&q=85",
+      "alt": "User Profile Avatar"
+    },
+    "scooter_street": {
+      "url": "https://images.unsplash.com/photo-1611956292173-c2445aa61709?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxlbGVjdHJpYyUyMHNjb290ZXIlMjBjaXR5JTIwc3RyZWV0fGVufDB8fHx8MTc4MjM3MjQ0Mnww&ixlib=rb-4.1.0&q=85",
+      "alt": "Electric scooter on city street"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Follow standard Uber/Lime UX: The map is the hero. Use MapView from react-native-maps. Render UI components as floating overlays (absolute position) or within the Bottom Sheet.",
+    "Implement the 'Scan QR' button as a prominent FAB layered *over* the map, anchored right above the bottom sheet.",
+    "Ensure dark mode support correctly inverts the surface colors, but keep the brand Primary (Neon Green #1ED760) extremely vibrant in both modes.",
+    "Use @gorhom/bottom-sheet for all detail and active rental interactions instead of pushing to new screens.",
+    "For Active Rental, implement a 'Swipe to End' slider mechanism to prevent accidental cancellation.",
+    "Implement haptics directly on primary actions like Reserve, QR Scan, and Swipe to End.",
+    "Ensure the sticky CTA in bottom sheets accounts for safe area."
+  ],
+  "haptics": {
+    "events": {
+      "onQRScanPress": "impactMedium",
+      "onReservePress": "impactHeavy",
+      "onSwipeToEnd": "notificationSuccess",
+      "onBottomSheetSnap": "impactLight"
+    }
+  }
+}

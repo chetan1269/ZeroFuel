@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { MapView, Marker } from '@/src/components/Map';
@@ -26,11 +26,10 @@ export default function ActiveRentalScreen() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
-    if (!active) router.replace('/(main)/home');
-  }, [active, router]);
-
-  if (!active) return null;
+  // Guard against deep-linking /active with no rental: use <Redirect /> instead
+  // of imperative router.replace inside an effect, which can fire before the
+  // Root Layout has mounted.
+  if (!active) return <Redirect href="/(main)/home" />;
 
   const ms = now - active.startedAt;
   const totalSec = Math.max(0, Math.floor(ms / 1000));

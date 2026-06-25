@@ -1,0 +1,79 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# ZeroFuel Backend — Application Configuration
+# Rename this file to application.yml for production. Use environment variables
+# or a secrets manager (AWS Secrets Manager / HashiCorp Vault) for sensitive values.
+# ──────────────────────────────────────────────────────────────────────────────
+
+spring:
+  application:
+    name: zerofuel-backend
+
+  # ── Database ───────────────────────────────────────────────────────────────
+  datasource:
+    url: jdbc:mysql://localhost:3306/zerofuel_db?useSSL=false&serverTimezone=Asia/Kolkata&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:zerofuel_user}
+    password: ${DB_PASSWORD:change_me_in_prod}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # ── JPA / Hibernate ────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      # Use 'validate' in production once schema is stable; 'update' for dev.
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+        # Batch writes for bulk inserts (e.g., seeding hubs/bikes)
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # ── Multipart (KYC document uploads) ──────────────────────────────────────
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 30MB
+
+# ── Server ─────────────────────────────────────────────────────────────────────
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# ── Custom ZeroFuel Properties ─────────────────────────────────────────────────
+zerofuel:
+  jwt:
+    # Minimum 32-character secret. Override with a cryptographically random value in prod.
+    secret: ${JWT_SECRET:ZeRoFuElSeCrEtK3yMuStB3AtL3ast32CharsL0ng!}
+    # 24 hours in milliseconds
+    expiration-ms: 86400000
+
+  otp:
+    # OTP is valid for 10 minutes
+    expiry-minutes: 10
+    # Max OTP attempts before cooldown
+    max-attempts: 5
+
+  # CO₂ savings calculation constant (grams saved per km on EV vs petrol equivalent)
+  co2-saved-per-km-grams: 110
+
+# ── Actuator ──────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.zerofuel: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

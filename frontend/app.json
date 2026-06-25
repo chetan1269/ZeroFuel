@@ -1,22 +1,33 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "ZeroFuel",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "zerofuel",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Scan QR codes to unlock EVs near you",
+        "NSLocationWhenInUseUsageDescription": "Show nearby EVs and hubs on the map",
+        "NSPhotoLibraryUsageDescription": "Upload KYC documents to verify your identity"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +43,18 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#000"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scan QR codes to unlock EVs"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Upload KYC documents to verify your identity"
         }
       ]
     ],

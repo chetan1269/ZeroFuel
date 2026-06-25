@@ -49,7 +49,7 @@ export default function HomeScreen() {
 
   const sheetRef = useRef<BottomSheet>(null);
 
-  const snapPoints = useMemo(() => ['18%', '55%'], []);
+  const snapPoints = useMemo(() => ['18%', '55%', '88%'], []);
 
   useEffect(() => {
     let mounted = true;
@@ -78,18 +78,39 @@ export default function HomeScreen() {
   const onSelectHub = (h: Hub) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setSelection({ kind: 'hub', data: h });
-    sheetRef.current?.snapToIndex(1);
+    sheetRef.current?.snapToIndex(2);
+  };
+
+  const onNearestHub = () => {
+    if (!nearestHub) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    setSelection({ kind: 'hub', data: nearestHub });
+    sheetRef.current?.snapToIndex(2);
   };
 
   const onReserve = () => {
     if (selection?.kind !== 'vehicle') return;
     if (user?.status === 'PENDING_KYC') {
-      // soft-block: just don't start the rental, the banner already explains.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
       return;
     }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
-    startRental(selection.data);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    router.push({
+      pathname: '/(main)/price-calculator',
+      params: { vehicleId: selection.data.id, hubId: selection.data.hubId ?? '' },
+    });
+  };
+
+  const onPickEvFromHub = (v: Vehicle) => {
+    if (user?.status === 'PENDING_KYC') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    router.push({
+      pathname: '/(main)/price-calculator',
+      params: { vehicleId: v.id, hubId: v.hubId ?? '' },
+    });
   };
 
   return (
@@ -175,6 +196,23 @@ export default function HomeScreen() {
             </Text>
           </View>
         ) : null}
+
+        {/* Nearest Hub pill button */}
+        {nearestHub ? (
+          <Pressable
+            onPress={onNearestHub}
+            testID="nearest-hub-button"
+            style={[
+              styles.nearestPill,
+              { backgroundColor: theme.colors.brand },
+            ]}
+          >
+            <Ionicons name="locate" size={16} color={palette.brandOn} />
+            <Text style={[styles.nearestText, { color: palette.brandOn }]}>
+              Nearest Hub · {nearestHub.availableEvs} EVs
+            </Text>
+          </Pressable>
+        ) : null}
       </SafeAreaView>
 
       {/* Floating QR FAB */}
@@ -230,9 +268,14 @@ export default function HomeScreen() {
           {selection?.kind === 'vehicle' ? (
             <VehicleDetails vehicle={selection.data} onReserve={onReserve} kycPending={user?.status === 'PENDING_KYC'} />
           ) : selection?.kind === 'hub' ? (
-            <HubDetails hub={selection.data} />
+            <HubDetails
+              hub={selection.data}
+              vehicles={vehicles.filter((v) => v.hubId === selection.data.id)}
+              onPickEv={onPickEvFromHub}
+              kycPending={user?.status === 'PENDING_KYC'}
+            />
           ) : (
-            <DefaultSheet hub={nearestHub} count={vehicles.length} />
+            <DefaultSheet hub={nearestHub} count={vehicles.length} onOpenHub={onNearestHub} />
           )}
         </BottomSheetScrollView>
       </BottomSheet>
@@ -240,7 +283,15 @@ export default function HomeScreen() {
   );
 }
 
-function DefaultSheet({ hub, count }: { hub?: Hub; count: number }) {
+function DefaultSheet({
+  hub,
+  count,
+  onOpenHub,
+}: {
+  hub?: Hub;
+  count: number;
+  onOpenHub: () => void;
+}) {
   const theme = useTheme();
   return (
     <View>
@@ -248,7 +299,8 @@ function DefaultSheet({ hub, count }: { hub?: Hub; count: number }) {
         {count} EVs near you
       </Text>
       {hub ? (
-        <View
+        <Pressable
+          onPress={onOpenHub}
           style={[styles.card, { backgroundColor: theme.colors.surfaceSecondary }]}
           testID="nearest-hub-card"
         >
@@ -266,7 +318,7 @@ function DefaultSheet({ hub, count }: { hub?: Hub; count: number }) {
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceTertiary} />
-        </View>
+        </Pressable>
       ) : null}
       <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceTertiary }]}>
         TIP
@@ -371,7 +423,17 @@ function VehicleDetails({
   );
 }
 
-function HubDetails({ hub }: { hub: Hub }) {
+function HubDetails({
+  hub,
+  vehicles,
+  onPickEv,
+  kycPending,
+}: {
+  hub: Hub;
+  vehicles: Vehicle[];
+  onPickEv: (v: Vehicle) => void;
+  kycPending?: boolean;
+}) {
   const theme = useTheme();
   return (
     <View>
@@ -387,13 +449,82 @@ function HubDetails({ hub }: { hub: Hub }) {
         <Stat icon="grid" label="Slots" value={`${hub.totalSlots}`} />
         <Stat icon="navigate" label="Distance" value="0.32 km" />
       </View>
+
+      <Text
+        style={[styles.sectionLabel, { color: theme.colors.onSurfaceTertiary, marginTop: spacing.lg }]}
+        testID="hub-evs-heading"
+      >
+        AVAILABLE EVS · {vehicles.length}
+      </Text>
+
+      {vehicles.length === 0 ? (
+        <View style={[styles.evEmpty, { backgroundColor: theme.colors.surfaceSecondary }]}>
+          <Ionicons name="alert-circle" size={18} color={theme.colors.onSurfaceTertiary} />
+          <Text style={[styles.evEmptyText, { color: theme.colors.onSurfaceSecondary }]}>
+            No EVs available right now. Pull to refresh.
+          </Text>
+        </View>
+      ) : (
+        vehicles.map((v) => (
+          <Pressable
+            key={v.id}
+            onPress={() => onPickEv(v)}
+            disabled={kycPending}
+            testID={`hub-ev-${v.id}`}
+            style={({ pressed }) => [
+              styles.evRow,
+              {
+                backgroundColor: theme.colors.surfaceSecondary,
+                opacity: kycPending ? 0.55 : pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <View style={[styles.evIcon, { backgroundColor: theme.colors.brandTertiary }]}>
+              <MaterialCommunityIcons
+                name="scooter-electric"
+                size={24}
+                color={theme.colors.brandSecondary}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.evTitle, { color: theme.colors.onSurface }]}>
+                {v.model}
+              </Text>
+              <View style={styles.evMetaRow}>
+                <Ionicons name="flash" size={11} color={theme.colors.brandSecondary} />
+                <Text style={[styles.evMeta, { color: theme.colors.onSurfaceSecondary }]}>
+                  {v.battery}% · {v.rangeKm} km left
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.evPrice, { backgroundColor: theme.colors.brand }]}>
+              <Text style={{ color: palette.brandOn, fontWeight: '900', fontSize: 13 }}>
+                ₹{v.pricePerMin}/min
+              </Text>
+            </View>
+          </Pressable>
+        ))
+      )}
+
+      {kycPending ? (
+        <View
+          style={[styles.kycInline, { backgroundColor: '#FFB80022', marginTop: spacing.md }]}
+          testID="hub-kyc-warning"
+        >
+          <Ionicons name="alert-circle" size={16} color={palette.warning} />
+          <Text style={[styles.kycText, { color: theme.colors.onSurface }]}>
+            Complete KYC to start picking an EV.
+          </Text>
+        </View>
+      ) : null}
+
       <View style={{ height: 8 }} />
       <Button
-        label="Get Directions"
+        label="Get Directions to Hub"
         variant="secondary"
         onPress={() => {}}
         testID="hub-directions-button"
-        icon={<Ionicons name="navigate" size={18} color="#000" />}
+        icon={<Ionicons name="navigate" size={18} color={theme.colors.onSurface} />}
       />
     </View>
   );
@@ -519,4 +650,40 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radius.md,
   },
+  nearestPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 9,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    marginLeft: spacing.xs,
+    shadowColor: '#1ED760',
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  nearestText: { fontSize: 13, fontWeight: '800' },
+  evRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    marginBottom: spacing.sm,
+  },
+  evIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  evTitle: { fontSize: 15, fontWeight: '800' },
+  evMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  evMeta: { fontSize: 12 },
+  evPrice: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
+  evEmpty: {
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    gap: 8,
+  },
+  evEmptyText: { fontSize: 13, fontWeight: '500' },
 });

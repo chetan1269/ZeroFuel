@@ -11,15 +11,26 @@ config.cacheStores = [
   new FileStore({ root: path.join(root, 'cache') }),
 ];
 
-
-// // Exclude unnecessary directories from file watching
-// config.watchFolders = [__dirname];
-// config.resolver.blacklistRE = /(.*)\/(__tests__|android|ios|build|dist|.git|node_modules\/.*\/android|node_modules\/.*\/ios|node_modules\/.*\/windows|node_modules\/.*\/macos)(\/.*)?$/;
-
-// // Alternative: use a more aggressive exclusion pattern
-// config.resolver.blacklistRE = /node_modules\/.*\/(android|ios|windows|macos|__tests__|\.git|.*\.android\.js|.*\.ios\.js)$/;
-
 // Reduce the number of workers to decrease resource usage
 config.maxWorkers = 2;
+
+// Proxy /api requests to the Spring Boot backend running on localhost:8080.
+// This lets the browser call relative /api/v1/... URLs through the Metro dev
+// server, avoiding CORS and localhost-reachability issues in Replit's proxy.
+config.server = config.server || {};
+config.server.enhanceMiddleware = (metroMiddleware) => {
+  const { createProxyMiddleware } = require('http-proxy-middleware');
+  const apiProxy = createProxyMiddleware({
+    target: 'http://localhost:8080',
+    changeOrigin: true,
+    logLevel: 'warn',
+  });
+  return (req, res, next) => {
+    if (req.url.startsWith('/api')) {
+      return apiProxy(req, res, next);
+    }
+    return metroMiddleware(req, res, next);
+  };
+};
 
 module.exports = config;
